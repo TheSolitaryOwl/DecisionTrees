@@ -8,15 +8,18 @@ public class UADecisionTree
     private static int maxTreeDepth = 0;
     private static double minimumImpurity = 0;
     private static ArrayList<String> recordList = new ArrayList<String>();
+    private static String[] labels;
     private static double entropy[];
     private static double informationGain[];
+    Node rootNode = null;
 
     public static void main(String[] args) throws IOException
     {
         getTrainingMatrix("titanicdata.csv", "SURVIVED");
         setTreeMaxDepth(10);
         calculateEntropyForAllAttributes(numOfCols);
-        calculateInformationGainForEachAttribute();
+        calculateInformationGainForAllAttributes(numOfCols);
+        determineRootNode();
     }
 
     public static void getTrainingMatrix (String fileName, String targetLabel) throws IOException
@@ -35,6 +38,7 @@ public class UADecisionTree
             // GET COLUMN WITH TARGET LABEL
             if (lineNum == 0)
             {
+                labels = record.clone();
                 // FOR STORING VALUES FOR EACH ATTRIBUTE
                 informationGain = new double[record.length];
                 entropy = new double[record.length];
@@ -78,39 +82,92 @@ public class UADecisionTree
 
     }
 
-    private static void calulateEntropy(int col)
+    private static double calculateEntropy(int col, ArrayList<String> dataSet)
     {
         double e = 0;
         int trues = 0;
         int falses = 0;
         double pt = 0;
         double pf = 0;
-        for (String row : recordList)
+        for (String row : dataSet)
         {
             String[] data = row.split(",");
-            if (data[col].equalsIgnoreCase("0")) falses++;
-            if (data[col].equalsIgnoreCase("1")) trues++;
+            if (data[targetCol].equalsIgnoreCase("0")) falses++;
+            if (data[targetCol].equalsIgnoreCase("1")) trues++;
         }
 
         pt = (double)(trues) / (trues + falses);
         pf = (double)(falses) / (trues + falses);
 
-        e = -1 * (pt * (Math.log(pt) / Math.log(2)) + pf * (Math.log(pf) / Math.log(2)));
-        System.out.println(e);
-        entropy[col] = e;
+        double positivePart = pt * (Math.log(pt) / Math.log(2));
+        double negativePart = pf * (Math.log(pf) / Math.log(2));
+        if (Double.isNaN(positivePart)) positivePart = 0;
+        if (Double.isNaN(negativePart)) negativePart = 0;
+
+        e = -1 * (positivePart + negativePart);
+        return e;
     }
 
     private static void calculateEntropyForAllAttributes(int cols)
     {
         for (int i = 0; i < cols; i++)
         {
-            calulateEntropy(i);
-            System.out.println(entropy[i]);
+            entropy[i] = calculateEntropy(i, recordList);
+            //System.out.println(entropy[i]);
         }
     }
 
-    private static void calculateInformationGainForEachAttribute()
+    private static double calculateInformationGain(int col)
     {
-        
+        int trues = 0;
+        int falses = 0;
+        double pt = 0;
+        double pf = 0;
+        double informationGain = 0;
+
+        ArrayList<String> positiveList = new ArrayList<String>();
+        ArrayList<String> negativeList = new ArrayList<String>();
+
+        for (String row : recordList)
+        {
+            String[] data = row.split(",");
+            if (data[col].equalsIgnoreCase("0"))
+            {
+                falses++;
+                negativeList.add(row);
+            }
+            if (data[col].equalsIgnoreCase("1"))
+            {
+                trues++;
+                positiveList.add(row);
+            }
+        }
+
+        pt = (double)(trues) / (trues + falses);
+        pf = (double)(falses) / (trues + falses);
+
+        informationGain = entropy[col] - (pt * calculateEntropy(col, positiveList) + pf * calculateEntropy(col, negativeList));
+        return informationGain;
+    }
+
+    private static void calculateInformationGainForAllAttributes(int cols)
+    {
+        for (int i = 0; i < cols; i++)
+        {
+            informationGain[i] = calculateInformationGain(i);
+            //System.out.println(informationGain[i]);
+        }
+    }
+
+    private static void determineRootNode()
+    {
+        int attribute = 0;
+
+        for (int i  = 0; i < numOfCols; i++)
+        {
+            if (informationGain[i] > attribute) attribute = i;
+        }
+
+        System.out.println(labels[attribute]);
     }
 }
