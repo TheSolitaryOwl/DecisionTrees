@@ -1,3 +1,9 @@
+/********************************
+ Name: Zachary Rowton
+ Username: N/A
+ Problem Set: PS2
+ Due Date: February 21, 2019
+ ********************************/
 import java.util.ArrayList;
 
 public class Node

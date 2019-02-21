@@ -1,8 +1,16 @@
+/********************************
+ Name: Zachary Rowton
+ Username: N/A
+ Problem Set: PS2
+ Due Date: February 21, 2019
+ ********************************/
+
 import java.io.*;
 import java.util.ArrayList;
 
 public class UADecisionTree
 {
+    // Global variables
     private static int targetCol = 0;
     private static int numOfCols = 0;
     private static int maxTreeDepth = 0;
@@ -18,9 +26,9 @@ public class UADecisionTree
     {
         getTrainingMatrix("titanicdata.csv", "SURVIVED");
         setTreeMaxDepth(20);
-        calculateEntropyForAllAttributes(numOfCols);
-        calculateInformationGainForAllAttributes(numOfCols);
-        determineRootNode();
+        calculateEntropyForAllAttributes(numOfCols);  // gets the entropy for all attributes
+        calculateInformationGainForAllAttributes(numOfCols); // gets information gain for all attributes
+        determineRootNode(); // decides best attribute to split on and creates root node
         rootNode = train(recordList, new Node(null), labels);
     }
 
@@ -42,7 +50,7 @@ public class UADecisionTree
             {
                 for (String s : record)
                 {
-                    labels.add(s);
+                    labels.add(s); // adds labels to list as they are read
                 }
 
                 // FOR STORING VALUES FOR EACH ATTRIBUTE
@@ -80,16 +88,20 @@ public class UADecisionTree
     }
 
     public static Node train(ArrayList<String> dataSet, Node currentNode, ArrayList<String> attributes)
-    {
+    {   //System.out.println("Train class has been called with a dataset size of:" + dataSet.size());
+        //System.out.println(attributes.toString());
         Node current = currentNode;
-        System.out.println(current.label);
+        //System.out.println(current.label);
+        // Lists for storing subset datasets to be passed onto child nodes
         ArrayList<String> leftSubset = new ArrayList<String>();
         ArrayList<String> rightSubset = new ArrayList<String>();
+        // for attribute list with current attribute removed from calculation
         ArrayList<String> newAttributes = new ArrayList<String>(attributes);
 
-        double e[] = new double[attributes.size()];
-        double ig[] = new double[attributes.size()];
+        //double e[] = new double[attributes.size()];
+        //double ig[] = new double[attributes.size()];
 
+        // STOP CONDITIONS
         if (dataIsPure(dataSet))
         {
             // add leaf node
@@ -98,6 +110,8 @@ public class UADecisionTree
         {
             // add leaf node
         }
+
+        // Otherwise, create node
         else
         {
             // find best attribute based on ig
@@ -109,7 +123,8 @@ public class UADecisionTree
                     bestAtt = i;
                 }
             }
-            newAttributes.remove(bestAtt);
+
+            if (newAttributes.size() > 0) newAttributes.remove(bestAtt);
 
             // split on attribute
             for (String row : dataSet)
@@ -127,7 +142,7 @@ public class UADecisionTree
 
     public static void classifyValue (String record)
     {
-
+        // take in record and classify as either survived or not survived
     }
 
     private static double calculateEntropy(int col, ArrayList<String> dataSet)
