@@ -8,18 +8,20 @@ public class UADecisionTree
     private static int maxTreeDepth = 0;
     private static double minimumImpurity = 0;
     private static ArrayList<String> recordList = new ArrayList<String>();
-    private static String[] labels;
+    private static ArrayList<String> labels = new ArrayList<String>();
     private static double entropy[];
     private static double informationGain[];
-    Node rootNode = null;
+    static Node rootNode = null;
+    static int currentDepth = 0;
 
     public static void main(String[] args) throws IOException
     {
         getTrainingMatrix("titanicdata.csv", "SURVIVED");
-        setTreeMaxDepth(10);
+        setTreeMaxDepth(20);
         calculateEntropyForAllAttributes(numOfCols);
         calculateInformationGainForAllAttributes(numOfCols);
         determineRootNode();
+        rootNode = train(recordList, new Node(null), labels);
     }
 
     public static void getTrainingMatrix (String fileName, String targetLabel) throws IOException
@@ -38,7 +40,11 @@ public class UADecisionTree
             // GET COLUMN WITH TARGET LABEL
             if (lineNum == 0)
             {
-                labels = record.clone();
+                for (String s : record)
+                {
+                    labels.add(s);
+                }
+
                 // FOR STORING VALUES FOR EACH ATTRIBUTE
                 informationGain = new double[record.length];
                 entropy = new double[record.length];
@@ -49,6 +55,7 @@ public class UADecisionTree
                     if (record[i].equalsIgnoreCase(targetLabel))
                     {
                         targetCol = i;
+                        labels.remove(i);
                     }
                 }
             }
@@ -72,9 +79,50 @@ public class UADecisionTree
         minimumImpurity = minImpurity;
     }
 
-    public static void train(String trainingDataFilename)
+    public static Node train(ArrayList<String> dataSet, Node currentNode, ArrayList<String> attributes)
     {
+        Node current = currentNode;
+        System.out.println(current.label);
+        ArrayList<String> leftSubset = new ArrayList<String>();
+        ArrayList<String> rightSubset = new ArrayList<String>();
+        ArrayList<String> newAttributes = new ArrayList<String>(attributes);
 
+        double e[] = new double[attributes.size()];
+        double ig[] = new double[attributes.size()];
+
+        if (dataIsPure(dataSet))
+        {
+            // add leaf node
+        }
+        else if (currentDepth >= maxTreeDepth)
+        {
+            // add leaf node
+        }
+        else
+        {
+            // find best attribute based on ig
+            int bestAtt = 0;
+            for (int i = 0; i < attributes.size(); i++)
+            {
+                if (informationGain[i] > bestAtt)
+                {
+                    bestAtt = i;
+                }
+            }
+            newAttributes.remove(bestAtt);
+
+            // split on attribute
+            for (String row : dataSet)
+            {
+                String[] data = row.split(",");
+                if (data[bestAtt].equalsIgnoreCase("1")); rightSubset.add(row);
+                if (data[bestAtt].equalsIgnoreCase("0")); leftSubset.add(row);
+            }
+
+            current.rightChild = train(rightSubset, new Node(""), newAttributes);
+            current.leftChild = train(leftSubset, new Node(""), newAttributes);
+        }
+        return current;
     }
 
     public static void classifyValue (String record)
@@ -117,7 +165,7 @@ public class UADecisionTree
         }
     }
 
-    private static double calculateInformationGain(int col)
+    private static double calculateInformationGain(int col, ArrayList<String> dataSet)
     {
         int trues = 0;
         int falses = 0;
@@ -128,7 +176,7 @@ public class UADecisionTree
         ArrayList<String> positiveList = new ArrayList<String>();
         ArrayList<String> negativeList = new ArrayList<String>();
 
-        for (String row : recordList)
+        for (String row : dataSet)
         {
             String[] data = row.split(",");
             if (data[col].equalsIgnoreCase("0"))
@@ -154,7 +202,7 @@ public class UADecisionTree
     {
         for (int i = 0; i < cols; i++)
         {
-            informationGain[i] = calculateInformationGain(i);
+            informationGain[i] = calculateInformationGain(i, recordList);
             //System.out.println(informationGain[i]);
         }
     }
@@ -168,6 +216,29 @@ public class UADecisionTree
             if (informationGain[i] > attribute) attribute = i;
         }
 
-        System.out.println(labels[attribute]);
+        //rootNode = new Node(labels.get(attribute), recordList);
+        //rootNode = train(recordList, new Node(labels.get(attribute)), labels);
+    }
+
+    private static boolean dataIsPure(ArrayList<String> data)
+    {
+        int trues = 0;
+        int falses = 0;
+
+        for (String line : data)
+        {
+            String[] records = line.split(",");
+            if (records[targetCol].equalsIgnoreCase("0")) falses++;
+            if (records[targetCol].equalsIgnoreCase("1")) trues++;
+        }
+
+        if ((trues > 0 && falses == 0) || (falses > 0 && trues == 0))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

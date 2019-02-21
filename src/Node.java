@@ -5,8 +5,7 @@ public class Node
     public Node leftChild = null;
     public Node rightChild = null;
     public String label = null;
-    private ArrayList<String> leftSubset = new ArrayList<String>();
-    private ArrayList<String> rightSubset = new ArrayList<String>();
+    public boolean isLeaf = false;
 
     Node (String label)
     {
